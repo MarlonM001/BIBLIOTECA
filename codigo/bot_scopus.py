@@ -128,7 +128,10 @@ def bajar_hasta(page, el, max_pasos=80):
             direccion = 1
         page.mouse.wheel(0, direccion * random.randint(250, 450))
         time.sleep(random.uniform(0.25, 0.6))
-    el.scroll_into_view_if_needed()
+    try:
+        el.scroll_into_view_if_needed(timeout=5000)
+    except Exception:
+        pass
 
 
 def resaltar(el):
@@ -138,10 +141,28 @@ def resaltar(el):
         pass
 
 
+def clic_seguro(el):
+    """Clic normal; si el elemento esta tapado o fuera de pantalla, clic por JavaScript."""
+    try:
+        el.scroll_into_view_if_needed(timeout=5000)
+    except Exception:
+        pass
+    try:
+        el.click(timeout=8000)
+        return True
+    except Exception:
+        pass
+    try:
+        el.evaluate("e => (e.closest('a') || e).click()")
+        return True
+    except Exception:
+        return False
+
+
 def clic_y_seguir(context, page, el, espera=15):
     """Hace clic; si se abre una pestana nueva, devuelve esa pestana."""
     antes = len(context.pages)
-    el.click()
+    clic_seguro(el)
     fin = time.time() + espera
     while time.time() < fin:
         if len(context.pages) > antes:
@@ -198,13 +219,20 @@ def ir_a_bases(context, page):
     log("Abriendo la biblioteca del SENA...")
     page.goto(INICIO_URL, wait_until="domcontentloaded", timeout=90000)
     pausa(1.5, 2.5)
-    boton = primero_visible(page, ['a[href*="bases.html"] img', 'a[href*="bases.html"]'], timeout=15)
+    boton = primero_visible(page, ['img[src*="Boton_BD"]',
+                                   '.contenedor a[href*="bases.html"] img',
+                                   'main a[href*="bases.html"] img'], timeout=15)
     if boton:
         log("Clic en 'Bases de datos'.")
+        bajar_hasta(page, boton, max_pasos=15)
         resaltar(boton)
         pausa(0.6, 1.2)
-        page = clic_y_seguir(context, page, boton)
+        try:
+            page = clic_y_seguir(context, page, boton)
+        except Exception as e:
+            log(f"No se pudo hacer clic ({e.__class__.__name__}), voy directo.")
     if "bases.html" not in page.url:
+        log("Abriendo Bases de datos directamente.")
         page.goto(BASES_URL, wait_until="domcontentloaded", timeout=90000)
     pausa(1.5, 2.5)
     return page
@@ -243,7 +271,7 @@ def iniciar_sesion(context, page):
                                  'button:has-text("Ingresar")', 'input[value*="Ingresar"]'], timeout=5)
     log("Ingresando...")
     if boton:
-        boton.click()
+        clic_seguro(boton)
     else:
         clave.press("Enter")
     try:
@@ -292,7 +320,7 @@ def buscar(context, page, termino):
     pestana = primero_visible(page, ['button:has-text("Documents")', '[role="tab"]:has-text("Documents")'], timeout=5)
     if pestana:
         try:
-            pestana.click()
+            clic_seguro(pestana)
             pausa(0.5, 1)
         except Exception:
             pass
@@ -318,7 +346,7 @@ def buscar(context, page, termino):
         boton = primero_visible(page, ['button[type="submit"]:has-text("Search")',
                                        'button:has-text("Search")'], timeout=5)
         if boton:
-            boton.click()
+            clic_seguro(boton)
     if not primero_visible(page, TITULOS, timeout=60):
         raise RuntimeError("No aparecieron resultados.")
     quitar_cookies(page)
