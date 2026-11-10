@@ -1,0 +1,20 @@
+BOT SCOPUS - BIBLIOTECA SENA
+============================
+
+COMO USARLO
+1. Doble clic en INICIAR_BOT.bat
+2. Escriba usuario, contrasena, lo que quiere buscar, cuantos documentos
+   abrir y cuantos minutos leer cada uno.
+   (Enter deja el valor que aparece entre parentesis.)
+3. El bot abre el navegador, entra a la biblioteca, va a Bases de datos,
+   baja hasta Scopus, inicia sesion, busca y abre los documentos.
+
+REQUISITOS
+- Python instalado (python.org) con la casilla "Add python.exe to PATH".
+- La primera vez instala Playwright solo.
+- Usa Google Chrome o Edge si estan instalados.
+
+CARPETAS
+- codigo\     -> el programa (bot_scopus.py)
+- capturas\   -> imagen de la pantalla si algo falla
+- registros\  -> historial de cada ejecucion (un archivo por dia)
